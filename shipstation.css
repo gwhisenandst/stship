@@ -1,0 +1,74 @@
+:root{
+    --green-200-base: 230, 71%, 93%;
+    --green-300-base: 230, 52%, 60%;
+    --green-500-base: 230, 56%, 40%;
+    --green-600-base: 230, 100%, 25%;
+    --green-800-base: 230, 100%, 23%;
+    --green-900-base: 230, 100%, 15%;
+    --green-0C5B36: midnightblue;
+    --green-00331C: midnightblue;
+    --green-EEFFF5: #EEFFF5;
+    --green-007733: #007733;
+    --green-05b45e: #05b45e;
+    --green-0D6E3F: royalblue;
+    --green-D8FFEB: #D8FFEB;
+    --green-E5F6EE: #E5F6EE;
+    --green-003311: #003311;
+    --green-22EE88: #22EE88;
+    --green-00AA55: #00AA55;
+    --green-EDFDF5: #EDFDF5;
+    --green-B6F6D7: #B6F6D7;
+    --green-05B45E: #05B45E;
+    --green-088D4C: #088D4C;
+    --green-60ECA8: #60ECA8;
+    --green-052E1A: #052E1A;
+    --green-0B5C35: #0B5C35;
+    --green-1E4230: #1E4230;
+}
+
+#settingsDiv{
+	  display: none;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    z-index: 100;
+}
+
+#settingsBackground{
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    opacity: 50%;
+}
+
+#settingsWindow{
+    width: 80vw;
+    height: 80vh;
+    background: white;
+    position: absolute;
+    z-index: 101;
+    align-self: anchor-center;
+    justify-self: anchor-center;
+    display: flex;
+    flex-direction: column;
+    min-height: 460px;
+}
+
+.preset{
+	margin: 10px;
+	font-size: 24px;
+}
+
+.presetSub{
+	font-size: initial;
+}
+
+.presetLabel{
+	position: relative;
+  bottom: 9px;
+  margin: 5px;
+}
+
+.presetFlex{
+    display: flex;
+}
