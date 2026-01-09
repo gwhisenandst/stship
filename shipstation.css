@@ -1,5 +1,5 @@
 #settingsDiv{
-	  display: none;
+	display: none;
     width: 100vw;
     height: 100vh;
     position: absolute;
@@ -37,11 +37,11 @@
 
 .presetLabel{
 	position: relative;
-  bottom: 9px;
-  margin: 5px;
+	bottom: 9px;
+  	margin: 5px;
 }
 
 .presetFlex{
     display: flex;
-
 }
+
