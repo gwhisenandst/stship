@@ -43,7 +43,7 @@ let ev;
 //orderd by price
 function getShipRates() {
 	let percentPlus = 1.1;
-	let amountPlus = 1;
+	let amountPlus = .5;
 	let cheapValid = [];
 	let finalArray = [];
 	
@@ -1333,5 +1333,6 @@ new PerformanceObserver((entryList) => {
 
 
 //https://app.launchdarkly.com/sdk/evalx
+
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
