@@ -1,3 +1,5 @@
+//USE CTRL-SHIFT-R TO HARD REFRESH AFTER MAKING CHANGES
+
 let atarget = document.body;
 let btarget;
 let ptarget;
@@ -1337,4 +1339,5 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
