@@ -41,9 +41,10 @@ let ev;
 //then create a sub-group of those that fall within a percent of the cheapest,
 //finally organize that final sub-group by time/days returning this list of acceptable rates 
 //orderd by price
+let percentPlus = 1.1;
+let amountPlus = .5;
+
 function getShipRates() {
-	let percentPlus = 1.1;
-	let amountPlus = .5;
 	let cheapValid = [];
 	let finalArray = [];
 	
@@ -1336,3 +1337,4 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
