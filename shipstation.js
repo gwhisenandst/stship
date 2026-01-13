@@ -558,6 +558,20 @@ function createCustom(name, affectedArray) {
 		option.checked = false;
 	}
 	
+	if (!localStorage.getItem("newDay")) {
+		localStorage.setItem("newDay", 0);
+	}
+	
+	if (new Date().getHours() < 13 && localStorage.getItem("newDay") == 1) {
+		localStorage.setItem(option.id) == "false";
+		localStorage.setItem("newDay", 0);
+		if (option.checked == true) {
+			option.click();
+		}
+	} else if (new Date().getHours() >= 13 && localStorage.getItem("newDay") == 0) {
+		localStorage.setItem("newDay", 1)
+	}
+	
 	let label = document.createElement("label");
 	label.innerText = name;
 	label.className = "presetLabel";
@@ -661,8 +675,8 @@ function settingsButton() {
 	customOne.appendChild(customUPA);
 	customOne.appendChild(customFEG);
 	customOne.appendChild(customFEE);
-	customOne.appendChild(document.createElement("br"));
-	customOne.appendChild(customUPD);
+	//customOne.appendChild(document.createElement("br"));
+	//customOne.appendChild(customUPD);
 	
 	let customTwo = document.createElement("div");
 	customTwo.className = "preset";
@@ -673,6 +687,7 @@ function settingsButton() {
 	customTwo.appendChild(document.createElement("br"));
 	customTwo.appendChild(customPayPop);
 	customTwo.appendChild(customSumPop);
+	customTwo.appendChild(customUPD);
 	
 	customFields.appendChild(customOne);
 	customFields.appendChild(customTwo);
