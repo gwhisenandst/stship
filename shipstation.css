@@ -23,7 +23,7 @@
     justify-self: anchor-center;
     display: flex;
     flex-direction: column;
-    min-height: 460px;
+    min-height: 480px;
 }
 
 .preset{
@@ -44,4 +44,5 @@
 .presetFlex{
     display: flex;
 }
+
 
