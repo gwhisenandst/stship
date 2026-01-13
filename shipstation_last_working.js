@@ -39,6 +39,9 @@ let vall;
 let mav;
 let ev;
 
+let skipPaid = 0;
+let skipSummary = 0;
+
 //Maybe sort by cost, then find any 3 days or less, then find cheapest of that group,
 //then create a sub-group of those that fall within a percent of the cheapest,
 //finally organize that final sub-group by time/days returning this list of acceptable rates 
@@ -532,6 +535,55 @@ function createCustom(name, affectedArray) {
 	return optdiv;
 }
 
+function createToggle(name, relatedVariable) {
+	let optdiv = document.createElement("div");
+	optdiv.className = "presetSub";
+	let option = document.createElement("input");
+	option.type = "checkbox"
+	option.id = name;
+	let label = document.createElement("label");
+	label.innerText = name;
+	label.className = "presetLabel";
+	
+	if (localStorage.getItem(name) == null) {
+		localStorage.setItem(name, "0");
+	}
+	
+	if (localStorage.getItem(name) == "0") {
+			option.checked = false;
+	} else {
+			option.checked = true;
+	}
+	
+	switch (relatedVariable) {
+		case "skipPaid":
+			skipPaid = parseInt(localStorage.getItem(name));
+		case "skipSummary":
+			skipPaid = parseInt(localStorage.getItem(name));
+	}
+	
+	option.addEventListener("click", function(){
+		if (this.checked) {
+			localStorage.setItem(name, "1");
+		} else {
+			localStorage.setItem(name, "0");
+		}
+		
+		switch (relatedVariable) {
+			case "skipPaid":
+				skipPaid = parseInt(localStorage.getItem(name));
+			case "skipSummary":
+				skipSummary = parseInt(localStorage.getItem(name));
+		}
+	});
+	
+	
+	optdiv.appendChild(option);
+	optdiv.appendChild(label);
+	
+	return optdiv;
+}
+
 function settingsButton() {
 	let rateButton = document.querySelector('[class*="rate-browser-button"]');
 	let rateClone = rateButton.cloneNode(true);
@@ -559,8 +611,11 @@ function settingsButton() {
 	settingsWindow.appendChild(presetDiv);
 	
 	let customFields = document.createElement("div");
-	customFields.innerText = "Other Fields:";
-	customFields.className = "preset";
+	customFields.className = "presetFlex";
+	
+	let customOne = document.createElement("div");
+	customOne.innerText = "Other Fields:";
+	customOne.className = "preset";
 	
 	let customUPS = createCustom("UPS Ground Picked Up?", upsArray);
 	let customUPA = createCustom("UPS Air Picked Up?", upsAirArray);
@@ -569,13 +624,25 @@ function settingsButton() {
 	
 	let customUPD = createCustom("Disable UPS NDA on basic", upsNdaDisable);
 	
-	customFields.appendChild(customUPS);
-	customFields.appendChild(customUPA);
-	customFields.appendChild(customFEG);
-	customFields.appendChild(customFEE);
-	customFields.appendChild(document.createElement("br"));
-	customFields.appendChild(customUPD);
+	customOne.appendChild(customUPS);
+	customOne.appendChild(customUPA);
+	customOne.appendChild(customFEG);
+	customOne.appendChild(customFEE);
+	customOne.appendChild(document.createElement("br"));
+	customOne.appendChild(customUPD);
 	
+	let customTwo = document.createElement("div");
+	customTwo.className = "preset";
+	
+	let customPayPop = createToggle("Disable Paid Popup?", "skipPaid");
+	let customSumPop = createToggle("Disable Summary Popup?", "skipSummary");
+	
+	customTwo.appendChild(document.createElement("br"));
+	customTwo.appendChild(customPayPop);
+	customTwo.appendChild(customSumPop);
+	
+	customFields.appendChild(customOne);
+	customFields.appendChild(customTwo);
 	settingsWindow.appendChild(customFields);
 	
 	let settingsBackground = document.createElement("div");
@@ -700,13 +767,17 @@ let aobserver = new MutationObserver((mutations) => {
 				  			} else if(eachtag.indexOf("[1-Day]") > -1) {
 				  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
 				  				paidflag = 1;
-				  				alert("This customer has paid for " + shiptype + " shipping!");
+				  				if (skipPaid == 0) {
+				  					alert("This customer has paid for " + shiptype + " shipping!");
+				  				}
 				  				break;
 				  			} else if(eachtag.indexOf("[2-Day]") > -1) {
 				  				//console.log("2 day shipping paid");
 				  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
 				  				paidflag = 2;
-				  				alert("This customer has paid for " + shiptype + " shipping!");
+				  				if (skipPaid == 0) {
+				  					alert("This customer has paid for " + shiptype + " shipping!");
+				  				}
 				  				break;
 				  			}
 		  				}
@@ -768,150 +839,6 @@ let aobserver = new MutationObserver((mutations) => {
 		}
 	});
 });
-
-function orderStart() {
-	try{
-		//pullUpOrder();
-	}catch{}
-	try{
-		//console.log(mutation.addedNodes[0]);
-//set name of tab to cust name
-		if (document.title == "ShipStation") {
-			let cbutton = document.evaluate("//*[text()='View']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-		  setTimeout(function() {
-		  	cbutton.click();
-		  }, 500);
-		  setTimeout(function() {
-			  let cname = document.querySelector('[data-testid="read-only-address"]').firstElementChild;
-			  
-			  let address1 = cname.nextElementSibling.innerText + " ";
-			  let address2 = cname.nextElementSibling.nextElementSibling.innerText + " ";
-			  let address3 = cname.nextElementSibling.nextElementSibling.nextElementSibling.innerText + " ";
-			  let address = "";
-			  //console.log(address1);
-			  //console.log(address2);
-			  //console.log(address3);
-			  if (address1 != " ") {
-			  	address = address + address1;
-			  }
-			  if (address2 != " ") {
-			  	address = address + address2;
-			  }
-			  if (address3 != " ") {
-			  	address = address + address3;
-			  }
-			  //address = address.replaceAll("\s", "+");
-			  //console.log(address.replaceAll(" ", "+"));
-			  let addDiv = document.createElement("a");
-			  addDiv.innerText = "Maps";
-			  let formattedLink = address.trimEnd().replaceAll("# ", "");
-			  formattedLink = "https://www.google.com/maps/search/" + formattedLink.replaceAll(" ", "+");
-			  addDiv.href = formattedLink;
-	    	addDiv.target = "blank";
-			  document.querySelector('[class*="view-address-link"]').parentElement.appendChild(addDiv);
-			  document.title = cname.innerText;
-			  cbutton.click();
-		  }, 750);
-		}
-//set all flags for shipping decisions
-		try{
-			if(paidflag == 0) {
-  			let dimsx = document.evaluate("//*[text()='L']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.previousElementSibling.firstElementChild.value;
-  			let dimsy = document.evaluate("//*[text()='W']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.previousElementSibling.firstElementChild.value;
-  			let dimsz = document.evaluate("//*[text()='H']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.previousElementSibling.firstElementChild.value;
-  			let tdim = dimsx * dimsy * dimsz;
-  			if (tdim == 0) {
-  				packflag = 0;
-  				alert("There doesn't seem to be a box size set for this order?");
-  			}	else if (tdim <= 390) {
-  				packflag = 1;
-  			} else if (tdim > 390) {
-  				packflag = 0;
-  			}
-  			if (onum.indexOf("BBY03-") > -1){
-  				bestBuyFlag = 1;
-  			}
-  			console.log(document.querySelector('[class*="validate-links"]').firstElementChild.firstElementChild.viewBox.baseVal.width);
-  			if (document.querySelector('[class*="validate-links"]').firstElementChild.firstElementChild.viewBox.baseVal.width < 18) {
-			  	businessFlag = 1;
-			  }
-  			try {
-					let tags = document.evaluate("//*[text()='Tags:']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.nextElementSibling.firstElementChild;
-					for(t=0;t<tags.children.length;t++){
-						let eachtag = tags.children[t].firstElementChild.firstElementChild.innerText;
-		  			if (eachtag.indexOf("Secret Shopper") > -1 && secretShop == null) {
-		  				secretShop = 1;
-		  				alert("THIS IS A SECRET SHOPPER!!!");
-		  				break;
-		  			} else if(eachtag.indexOf("[1-Day]") > -1) {
-		  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
-		  				paidflag = 1;
-		  				alert("This customer has paid for " + shiptype + " shipping!");
-		  				break;
-		  			} else if(eachtag.indexOf("[2-Day]") > -1) {
-		  				//console.log("2 day shipping paid");
-		  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
-		  				paidflag = 2;
-		  				alert("This customer has paid for " + shiptype + " shipping!");
-		  				break;
-		  			}
-  				}
-  			} catch {}
-			}
-		} catch {}
-	} catch {}
-//proceed to verify items
-	try{
-		if (vall == undefined || vall.disabled == true) {
-  		vall = document.evaluate("//*[text()='Verify All']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-		}
-	}catch{
-		//console.log("Failed to find Verify All button");
-	}
-	try{
-		if (mav == undefined || mav.disabled == true) {
-  		mav = document.evaluate("//*[text()='Mark as Verified (v)']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.parentElement;
-		}
-	}catch{
-		//console.log("Failed to find Mark All Verified button");
-	}
-	try{
-		if (ev == undefined || ev.disabled == true) {
-  		ev = document.evaluate("//*[text()='Edit Verification']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.parentElement;
-		}
-	}catch{
-		//console.log("Failed to find Edit Verification button");
-	}
-	if (packflag != -1) {
-		if (vall != undefined && ev == undefined && bflag == 0) {
-			console.log("verify all");
-  		vall.click();
-  		vall.disabled = true;
-  		bflag = 1;
-		} else if (mav != undefined && mav.disabled == false && ev == undefined && bflag == 1) {
-			console.log("mark all verified");
-			mav.click();
-			mav.disabled = true;
-			bflag = 2;
-		} else if (bflag == 0 && ev != undefined && vall != undefined && mav == undefined) {
-			console.log("already verified, proceed to ship");
-  		vall.disabled = true;
-			bflag = 2;
-		}
-//If everything verifies, ship the order
-		if (bflag == 2) {
-			tcheck = document.evaluate("//*[text()='Rate:']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.nextElementSibling.firstElementChild.lastElementChild;
-			//console.log("start Shipping");
-			tobserver.observe(tcheck, {
-			  attributes: true,
-			});
-			setTimeout(function() {
-				shipCond();
-			}, 500);
-			bflag = 3;
-		}
-	}
-};
 
 /*
 let scanobserver = new MutationObserver((mutations) => {
@@ -1092,21 +1019,11 @@ function recordShip(endFlag = 0) {
 		})
 		newCheapest(sortedArray[0]);
 		
-		/*
-		if (secretShop == 1) {
-			alert("THIS IS A SECRET SHOPPER, MAKE SURE EVERYTHING IS AS NEEDED"  + "\n\n" + "Cheapest rate was: " + cheapest.split("-")[1] + "\n\n" + "Out of:\n\n" + formattedRates);
-		} else if (paidflag > 0) {
-			alert("Cheapest rate was: " + cheapest.split("-")[1] + "\n\n" + "Check to make sure the shipping rate is cheaper than what the customer paid:" + "\n\n" + "Out of:\n\n" + formattedRates);
-		} else {
-			alert("Cheapest rate was: " + cheapest.split("-")[1] + "\n\n" + "Out of:\n\n" + formattedRates);
-		}
-		*/
-		
 			if (secretShop == 1) {
 			alert("THIS IS A SECRET SHOPPER, MAKE SURE EVERYTHING IS AS NEEDED"  + "\n\n" + "Cheapest rate was: " + sortedArray[0].name + "\n\n" + "Out of:\n\n" + newFormat);
-		} else if (paidflag > 0) {
+		} else if (paidflag > 0 && skipPaid == 0) {
 			alert("Cheapest rate was: " + sortedArray[0].name + "\n\n" + "Check to make sure the shipping rate is cheaper than what the customer paid:" + "\n\n" + "Out of:\n\n" + newFormat);
-		} else {
+		} else if (skipPaid == 0) {
 			alert("Cheapest rate was: " + sortedArray[0].name + "\n\n" + "Out of:\n\n" + newFormat);
 		}
 		
@@ -1339,4 +1256,3 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-
