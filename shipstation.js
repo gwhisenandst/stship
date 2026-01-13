@@ -42,12 +42,14 @@ let ev;
 let skipPaid = 0;
 let skipSummary = 0;
 
+let changeShipFlag = 0;
+
 //Maybe sort by cost, then find any 3 days or less, then find cheapest of that group,
 //then create a sub-group of those that fall within a percent of the cheapest,
 //finally organize that final sub-group by time/days returning this list of acceptable rates 
 //orderd by price
 let percentPlus = 1.1;
-let amountPlus = .5;
+let amountPlus = 0.5;
 
 function getShipRates() {
 	let cheapValid = [];
@@ -88,10 +90,9 @@ function getShipRates() {
 	});
 	
 	return finalArray;
-	//return shipRatesDict.sort((a, b) => a.time < 4 && b.time < 4 && a.time - b.time || a.cost - b.cost && b.cost < a.cost * percentPlus);
 }
 
-function getBusinessDatesCount(x) {
+function getBusinessDatesCount(x, flag = 0) {
     let count = -1;
     const curDate = new Date();
     let daysWill = new Date(Date.now() + (Math.ceil((x - Date.now()) / (1000 * 3600 * 24)) * (1000 * 3600 * 25)));
@@ -101,7 +102,7 @@ function getBusinessDatesCount(x) {
     while (curDate <= daysWill) {
         const dayOfWeek = curDate.getDay();
         if (String(curDate).indexOf("Jan 01") > -1) {}
-        else if (String(curDate).indexOf("Jan") > -1 && parseInt(String(curDate).split(" ")[2]) >= 15 && parseInt(String(curDate).split(" ")[2]) <= 21  && dayOfWeek == 1) {}
+        else if (String(curDate).indexOf("Jan") > -1 && parseInt(String(curDate).split(" ")[2]) >= 15 && parseInt(String(curDate).split(" ")[2]) <= 21  && dayOfWeek == 1 && flag == 0) {}
         else if (String(curDate).indexOf("May") > -1 && parseInt(String(curDate).split(" ")[2]) >= 8 && parseInt(String(curDate).split(" ")[2]) <= 14  && dayOfWeek == 0) {}
         else if (String(curDate).indexOf("May") > -1 && parseInt(String(curDate).split(" ")[2]) >= 25 && parseInt(String(curDate).split(" ")[2]) <= 31  && dayOfWeek == 1) {}
         else if (String(curDate).indexOf("Jul 04") > -1 && dayOfWeek >= 1 && dayOfWeek <= 5) {}
@@ -120,7 +121,7 @@ function getBusinessDatesCount(x) {
     return count;
 }
 
-const providers = ["UPS® Ground", "UPS 3 Day Select®", "FedEx Ground®", "FedEx Home Delivery®", "FedEx 2Day®", "UPS Next Day Air Saver®", "UPS 2nd Day Air®"];
+const providers = ["UPS® Ground", "UPS 3 Day Select®", "FedEx Ground®", "FedEx Home Delivery®", "FedEx 2Day®", "UPS Next Day Air Saver®", "UPS Next Day Air®", "UPS 2nd Day Air®", "FedEx SmartPost parcel select"];
 
 const upsground = new KeyboardEvent('keydown', {
   key: '7', // The specific key being pressed
@@ -173,6 +174,22 @@ const upsndasaver = new KeyboardEvent('keydown', {
 const ups2da = new KeyboardEvent('keydown', {
   key: '5', // The specific key being pressed
   code: 'Digit5', // The code for the '5' key
+  ctrlKey: true, // Indicate that the Ctrl key is pressed
+  bubbles: true, // Allow the event to bubble up through the DOM
+  cancelable: true // Allow the default action to be prevented
+});
+
+const upsnda = new KeyboardEvent('keydown', {
+  key: '1', // The specific key being pressed
+  code: 'Digit1', // The code for the '5' key
+  ctrlKey: true, // Indicate that the Ctrl key is pressed
+  bubbles: true, // Allow the event to bubble up through the DOM
+  cancelable: true // Allow the default action to be prevented
+});
+
+const fedexsp = new KeyboardEvent('keydown', {
+  key: '2', // The specific key being pressed
+  code: 'Digit2', // The code for the '5' key
   ctrlKey: true, // Indicate that the Ctrl key is pressed
   bubbles: true, // Allow the event to bubble up through the DOM
   cancelable: true // Allow the default action to be prevented
@@ -250,7 +267,7 @@ function orderNumHandler() {
 }
 
 function pullUpOrder() {
-	console.log("pull order");
+	//console.log("pull order");
 	//This must be run when the ability to search for an order has loaded
 	btarget = document.getElementById("app-root").firstChild.firstChild.children[1];
 	//console.log(btarget);
@@ -290,6 +307,7 @@ let mapProviders = {
 	"FedEx Home Delivery®":fedexhome,
 	"FedEx Ground®":fedexground,
 	"UPS Next Day Air Saver®":upsndasaver,
+	"UPS Next Day Air®":upsnda,
 	"UPS 2nd Day Air®":ups2da,
 	"FedEx 2Day®":fedex2day
 };
@@ -302,6 +320,21 @@ function encodeString(localStorName, shipName, checked) {
 		resultString = localStorage.getItem(localStorName).replace(shipName + ",", "");
 	}
 	localStorage.setItem(localStorName, resultString);
+	mapType[localStorName]
+}
+
+function tempMap(localStorNameClosest, shipNameArray) {
+	let resultString = localStorage.getItem(localStorNameClosest);
+	
+	shipNameArray.forEach(function(shipName) {
+		if (resultString.indexOf(shipName) > -1) {
+			//console.log(shipName);
+			resultString = resultString.replace(shipName + ",", "");
+		}
+		//console.log(resultString);
+	});
+	
+	return decodeString(resultString);
 }
 
 function decodeString(string) {
@@ -696,11 +729,23 @@ let aobserver = new MutationObserver((mutations) => {
 				  	cbutton.click();
 				  }, 100);
 				  setTimeout(function() {
-					  let cname = document.querySelector('[data-testid="read-only-address"]').firstElementChild;
+					  let cname = document.querySelector('[data-testid="read-only-address"]').children;
 					  
-					  let address1 = cname.nextElementSibling.innerText + " ";
-					  let address2 = cname.nextElementSibling.nextElementSibling.innerText + " ";
-					  let address3 = cname.nextElementSibling.nextElementSibling.nextElementSibling.innerText + " ";
+					  let address1
+					  let address2
+					  let address3
+					  
+					  if (cname.length <= 6) {
+						  address1 = cname[1].innerText + " ";
+						  address2 = cname[2].innerText + " ";
+						  address3 = cname[3].innerText + " ";
+					  } else if (cname.length >= 7) {
+					  	//Business
+						  address1 = cname[2].innerText + " ";
+						  address2 = cname[3].innerText + " ";
+						  address3 = cname[4].innerText + " ";
+					  }
+					  
 					  let address = "";
 					  //console.log(address1);
 					  //console.log(address2);
@@ -714,8 +759,15 @@ let aobserver = new MutationObserver((mutations) => {
 					  if (address3 != " ") {
 					  	address = address + address3;
 					  }
-					  //address = address.replaceAll("\s", "+");
-					  //console.log(address.replaceAll(" ", "+"));
+					  
+					  //set a flag if address is known undeliverable (HI, AK)
+					  if (address.indexOf(" HI ") > -1 || address.indexOf(" AK ") > -1) {
+					  	changeShipFlag = 1;
+					  }
+					   if (address1.toLowerCase().indexOf("po box") > -1 || address2.toLowerCase().indexOf("po box") > -1) {
+					   	changeShipFlag = 90;
+					   }
+					  
 					  let addDiv = document.createElement("a");
 					  addDiv.innerText = "Maps";
 					  let formattedLink = address.trimEnd().replaceAll("# ", "");
@@ -725,7 +777,7 @@ let aobserver = new MutationObserver((mutations) => {
 					  addDiv.href = formattedLink;
 			    	addDiv.target = "blank";
 					  document.querySelector('[class*="view-address-link"]').parentElement.appendChild(addDiv);
-					  document.title = cname.innerText;
+					  document.title = cname[0].innerText;
 					  cbutton.click();
 				  }, 150);
 	  		}
@@ -831,6 +883,7 @@ let aobserver = new MutationObserver((mutations) => {
 				tobserver.observe(tcheck, {
 				  attributes: true,
 				});
+				//console.log("run first ship");
 				setTimeout(function() {
 					shipCond();
 				}, 500);
@@ -914,11 +967,11 @@ function recordShip(endFlag = 0) {
 						//console.log(delTime);
 						numDays = parseInt(delTime.split(" day")[0]);
 						dateConv = new Date(Date.now() + (1000 * 3600 * 24 * numDays));
-						numDays = getBusinessDatesCount(dateConv);
+						numDays = getBusinessDatesCount(dateConv, 1);
 					} else if (delTime.indexOf(" day") > -1) {
 						numDays = parseInt(delTime.split(" day")[0]);
 						dateConv = new Date(Date.now() + (1000 * 3600 * 24 * numDays));
-						numDays = getBusinessDatesCount(dateConv);
+						numDays = getBusinessDatesCount(dateConv, 1);
 					} else {
 						//console.log("after tom");
 						dateConv = new Date(String((new Date).getFullYear()) + "-" + delTime.split(" ")[1].split("/")[0] + "-" + delTime.split(" ")[1].split("/")[1]);
@@ -947,7 +1000,7 @@ function recordShip(endFlag = 0) {
 			} else if (delTime.indexOf(" day") > -1) {
 				numDays = parseInt(delTime.split(" day")[0]);
 				dateConv = new Date(Date.now() + (1000 * 3600 * 24 * numDays));
-				numDays = getBusinessDatesCount(dateConv);
+				numDays = getBusinessDatesCount(dateConv, 1);
 			} else {
 				//console.log("after tom");
 				dateConv = new Date(String((new Date).getFullYear()) + "-" + delTime.split(" ")[1].split("/")[0] + "-" + delTime.split(" ")[1].split("/")[1]);
@@ -1049,110 +1102,48 @@ function shipCond() {
 	} catch {}
 	//console.log(packflag + " | " + paidflag + " | " + businessFlag);
 	
+	let shipFlag;
+	let useShipMap;
+	if (packflag == 1 && paidflag == 0) {
+		if (businessFlag == 0) {
+			shipFlag = "Small";
+		} else if (businessFlag == 1) {
+			shipFlag = "Small (Business)";
+		}
+	} else if (packflag == 0 && paidflag == 0) {
+		if (businessFlag == 0) {
+			shipFlag = "Large";
+		} else if (businessFlag == 1) {
+			shipFlag = "Large (Business)";
+		}
+	} else if (packflag == 0 && paidflag == 2) {
+		shipFlag = "Paid Large (2-Day)";
+	} else if (packflag == 1 && paidflag == 2) {
+		shipFlag = "Paid Small (2-Day)";
+	} else if (paidflag == 1) {
+		shipFlag = "Paid (1-Day)";
+	}
+	
+	if (changeShipFlag == 0) {
+		useShipMap = mapType[shipFlag];
+	} else if (changeShipFlag == 1) {
+		useShipMap = tempMap(shipFlag, ["UPS 3 Day Select®", "UPS Next Day Air Saver®"]);
+	} else if (changeShipFlag == 90) {
+		useShipMap = [fedexsp];
+	}
+	
 	if (tflag >= 0) {
 		if (Number.isInteger(tflag/2)) {
-			//if (packflag == 1 && paidflag == 0 && bestBuyFlag == 0) {
-			if (packflag == 1 && paidflag == 0) {
-				try{
-					if (businessFlag == 0) {
-						pageTarget.dispatchEvent(mapType["Small"][tflag/2]);
-						if (mapType["Small"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					} else if (businessFlag == 1) {
-						pageTarget.dispatchEvent(mapType["Small (Business)"][tflag/2]);
-						if (mapType["Small (Business)"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					}
-				}catch{
+			try{
+				//console.log(useShipMap);
+				pageTarget.dispatchEvent(useShipMap[tflag/2]);
+				if (useShipMap.length == tflag/2) {
 					recordShip(1);
 					tflag = -3;
 				}
-			//} else if (packflag == 0 && paidflag == 0 && bestBuyFlag == 0) {
-			} else if (packflag == 0 && paidflag == 0) {
-				try{
-					if (businessFlag == 0) {
-						//recordShip();
-						//setTimeout(function() {
-							pageTarget.dispatchEvent(mapType["Large"][tflag/2]);
-							if (mapType["Large"].length == tflag/2) {
-								recordShip(1);
-								tflag = -3;
-							}
-						//}, 100);
-					} else if (businessFlag == 1) {
-						//console.log("Here2");
-						pageTarget.dispatchEvent(mapType["Large (Business)"][tflag/2]);
-						if (mapType["Large (Business)"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					}
-				}catch{
-					recordShip(1);
-					tflag = -3;
-				}
-			} else if (paidflag == 1) {
-				try{
-					//recordShip();
-					//setTimeout(function() {
-						pageTarget.dispatchEvent(mapType["Paid (1-Day)"][tflag/2]);
-						if (mapType["Paid (1-Day)"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					//}, 100);
-				}catch{
-					recordShip(1);
-					tflag = -3;
-				}
-			} else if (paidflag == 2 && packflag == 0) {
-				try{
-					//recordShip();
-					//setTimeout(function() {
-						pageTarget.dispatchEvent(mapType["Paid Large (2-Day)"][tflag/2]);
-						if (mapType["Paid Large (2-Day)"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					//}, 100);
-				}catch{
-					recordShip(1);
-					tflag = -3;
-				}
-			} else if (paidflag == 2) {
-				try{
-					//recordShip();
-					//setTimeout(function() {
-						pageTarget.dispatchEvent(mapType["Paid Small (2-Day)"][tflag/2]);
-						if (mapType["Paid Small (2-Day)"].length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					//}, 100);
-				}catch{
-					recordShip(1);
-					tflag = -3;
-				}
-/*
-			} else if (bestBuyFlag == 1) {
-				try{
-					//recordShip();
-					//setTimeout(function() {
-						pageTarget.dispatchEvent(bbShip[tflag/2]);
-						if (bbShip.length == tflag/2) {
-							recordShip(1);
-							tflag = -3;
-						}
-					//}, 100);
-				}catch{
-					recordShip(1);
-					tflag = -3;
-				}
-*/
+			} catch {
+				recordShip(1);
+				tflag = -3;
 			}
 		}
 		tflag++;
