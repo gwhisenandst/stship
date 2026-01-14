@@ -1150,6 +1150,12 @@ function shipCond() {
 	} else if (changeShipFlag == 90) {
 		useShipMap = [fedexsp];
 	}
+
+	if (bestBuyFlag == 1 && packflag == 0) {
+		shipFlag = "Paid Large (2-Day)";
+	} else if (bestBuyFlag == 1 && packflag == 1) {
+		shipFlag = "Paid Small (2-Day)";
+	}
 	
 	if (tflag >= 0) {
 		if (Number.isInteger(tflag/2)) {
@@ -1266,6 +1272,7 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
 
 
