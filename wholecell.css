@@ -1,0 +1,48 @@
+#csv_div{
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: end;
+}
+
+.csv_field{
+	width: 9vw;
+	margin-right: 1vw;
+}
+
+.cust_button{
+	font-size: 10px;
+}
+
+.cust_checkbox{
+	display: flex;
+	position: absolute;
+	left: 49%;
+	flex-direction: column;
+}
+
+.cust_checkbox2{
+	display: flex;
+	position: absolute;
+	left: 41.5%;
+	flex-direction: column;
+}
+
+#ship_station_toggle{
+	display: none;
+}
+
+#preload_toggle{
+	display: none;
+}
+
+#preloadShip{
+	margin-top: 7px;
+}
+
+#ship_button{
+	background-image: url(https://wholecell-images.s3-us-west-1.amazonaws.com/integrations_shipstation-min.png);
+	background-size: cover;
+	height: 34px;
+  width: 34px;
+}
