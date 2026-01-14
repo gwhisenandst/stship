@@ -842,7 +842,7 @@ let aobserver = new MutationObserver((mutations) => {
 				  					alert("This customer has paid for " + shiptype + " shipping!");
 				  				}
 				  				break;
-				  			} else if(eachtag.indexOf("[2-Day]") > -1) {
+				  			} else if(eachtag.indexOf("[2-Day]") > -1 || bestBuyFlag == 1) {
 				  				//console.log("2 day shipping paid");
 				  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
 				  				paidflag = 2;
@@ -1266,6 +1266,7 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
 
 
