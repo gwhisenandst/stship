@@ -563,7 +563,7 @@ function createCustom(name, affectedArray) {
 	}
 	
 	if (new Date().getHours() < 13 && localStorage.getItem("newDay") == 1) {
-		localStorage.setItem(option.id) == "false";
+		localStorage.setItem(option.id, "false");
 		localStorage.setItem("newDay", 0);
 		if (option.checked == true) {
 			option.click();
@@ -1262,4 +1262,5 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
