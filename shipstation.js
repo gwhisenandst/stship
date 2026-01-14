@@ -231,7 +231,11 @@ function newCheapest(cheapestRate) {
 	} else if(providers.indexOf(cheapestRate.name) == 5) {
 		pageLocForDispatch.dispatchEvent(upsndasaver);
 	} else if(providers.indexOf(cheapestRate.name) == 6) {
+		pageLocForDispatch.dispatchEvent(upsnda);
+	} else if(providers.indexOf(cheapestRate.name) == 7) {
 		pageLocForDispatch.dispatchEvent(ups2da);
+	} else if(providers.indexOf(cheapestRate.name) == 8) {
+		pageLocForDispatch.dispatchEvent(fedexsp);
 	}
 }
 
@@ -1262,5 +1266,6 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
 
