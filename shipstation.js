@@ -942,7 +942,9 @@ function initialize() {
 	});
 	*/
 	
-	orderNumHandler();
+	setTimeout(function() {
+		orderNumHandler();
+	}, 250);
 	
 	
 	/*
@@ -1272,6 +1274,7 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
 
 
 
