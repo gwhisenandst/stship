@@ -41,6 +41,7 @@ let ev;
 
 let skipPaid = 0;
 let skipSummary = 0;
+let autoPrint = 0;
 
 let changeShipFlag = 0;
 
@@ -648,7 +649,9 @@ function createToggle(name, relatedVariable) {
 		case "skipPaid":
 			skipPaid = parseInt(localStorage.getItem(name));
 		case "skipSummary":
-			skipPaid = parseInt(localStorage.getItem(name));
+			skipSummary = parseInt(localStorage.getItem(name));
+		case "autoPrint":
+			autoPrint = parseInt(localStorage.getItem(name));
 	}
 	
 	option.addEventListener("click", function(){
@@ -663,6 +666,8 @@ function createToggle(name, relatedVariable) {
 				skipPaid = parseInt(localStorage.getItem(name));
 			case "skipSummary":
 				skipSummary = parseInt(localStorage.getItem(name));
+			case "autoPrint":
+				autoPrint = parseInt(localStorage.getItem(name));
 		}
 	});
 	
@@ -723,12 +728,14 @@ function settingsButton() {
 	let customTwo = document.createElement("div");
 	customTwo.className = "preset";
 	
-	let customPayPop = createToggle("Disable Paid Popup? (auto print too)", "skipPaid");
+	let customPayPop = createToggle("Disable Paid Popup?", "skipPaid");
 	let customSumPop = createToggle("Disable Summary Popup?", "skipSummary");
+	let customPrtPop = createToggle("Auto Print?", "autoPrint");
 	
 	customTwo.appendChild(document.createElement("br"));
 	customTwo.appendChild(customPayPop);
 	customTwo.appendChild(customSumPop);
+	customTwo.appendChild(customPrtPop);
 	customTwo.appendChild(customUPD);
 	
 	customFields.appendChild(customOne);
@@ -876,6 +883,7 @@ let aobserver = new MutationObserver((mutations) => {
 				  			} else if(eachtag.indexOf("[1-Day]") > -1) {
 				  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
 				  				paidflag = 1;
+				  				console.log(skipPaid);
 				  				if (skipPaid == 0) {
 				  					alert("This customer has paid for " + shiptype + " shipping!");
 				  				}
@@ -1148,7 +1156,7 @@ function recordShip(endFlag = 0) {
 		document.body.parentElement.prepend(shipDiv);
 		//getShipRates();
 		
-		if (skipPaid == 1) {
+		if (autoPrint == 1) {
 			setTimeout(function() {
 				setTimeout(function() {
 					let pageLocForDispatch = document.getElementsByClassName("body-j6miezO")[0];
