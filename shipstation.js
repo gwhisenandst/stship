@@ -864,7 +864,7 @@ let aobserver = new MutationObserver((mutations) => {
 		  				bestBuyFlag = 1;
 		  			}
 		  			//console.log(document.querySelector('[class*="validate-links"]').firstElementChild.firstElementChild.viewBox.baseVal.width);
-		  			if (document.querySelector('[class*="validate-links"]').firstElementChild.firstElementChild.viewBox.baseVal.width < 18) {
+		  			if (document.querySelector('[class*="validate-links"]').firstElementChild.firstElementChild.dataset.icon == "building") {
 					  	businessFlag = 1;
 					  }
 					  try {
