@@ -784,7 +784,7 @@ let aobserver = new MutationObserver((mutations) => {
 		*/
 		try{
 			//console.log(mutation.addedNodes[0]);
-			if (mutation.addedNodes[0].getAttribute("class").indexOf("fa-gear") > -1) {
+			if (mutation.addedNodes[0].getAttribute("class").indexOf("body-layout") > -1) {
 				//console.log(mutation.addedNodes[0]);
 //set name of tab to cust name
 				if (document.title == "ShipStation") {
@@ -1001,7 +1001,7 @@ function initialize() {
 }
 
 function recordShip(endFlag = 0) {
-	//console.log(endFlag);
+	//console.log("ship");
 	if (endFlag == 0) {
 	//console.log("recship");
 		provider = document.getElementsByClassName("shipping-service-NaNEHYX")[0].children[0].children[0].children[0].innerText;
@@ -1331,7 +1331,6 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-
 
 
 
