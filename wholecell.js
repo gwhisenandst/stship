@@ -1,9 +1,17 @@
-let n = 0;
+let nvar = 0;
 let t = 0;
 let f = 0;
 let ap = 0;
 let itemCountFlag = 0;
 let runOnceFlag = 0;
+
+const enter = new KeyboardEvent('keydown', {
+  key: 'e', // The specific key being pressed
+  //code: 'Enter', // The code for the '5' key
+  //ctrlKey: true, // Indicate that the Ctrl key is pressed
+  bubbles: true, // Allow the event to bubble up through the DOM
+  cancelable: true // Allow the default action to be prevented
+});
 
 //change this to 0 if don't need order commit, etc. change to 1 if do
 let salesOrderStuff = 1;
@@ -168,7 +176,7 @@ function commitShip() {
 				    		//Loop through each item in the order, if element has a class, check the quantity on the order. Seems if it has class it has SKU, which works for the goal here
 				    		for (i=0;i<document.getElementsByClassName("dataTable")[0].lastChild.children.length;i++){
 						    	if (document.getElementsByClassName("dataTable")[0].lastChild.children[i].hasAttribute("class")){
-						    			n = n + Number(document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[4].firstChild.innerText);
+						    			nvar = nvar + Number(document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[4].firstChild.innerText);
 						    		if (document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[1].children[0].textContent.startsWith("Apple Pencil")) {
 						    			ap++;
 						    		}
@@ -195,7 +203,7 @@ function commitShip() {
 				    /*
 				    for (i=0;i<document.getElementsByClassName("dataTable")[0].lastChild.children.length;i++){
 				    	if (document.getElementsByClassName("dataTable")[0].lastChild.children[i].hasAttribute("class")){
-				    			n = n + Number(document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[4].firstChild.innerText);
+				    			nvar = nvar + Number(document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[4].firstChild.innerText);
 				    		if (document.getElementsByClassName("dataTable")[0].lastChild.children[i].children[1].children[0].textContent.startsWith("Apple Pencil")) {
 				    			ap++;
 				    		}
@@ -210,7 +218,7 @@ function commitShip() {
 			    		document.execCommand('delete');
 			    		ap--;
 			    	}
-			  		if (n > 0 && t == n) {
+			  		if (nvar > 0 && t == nvar) {
 			    		navigator.clipboard.writeText(document.getElementsByTagName("textarea")[0].value);
 							f = 1;
 							yobserver.observe(ytarget, {
@@ -474,8 +482,9 @@ function makeCSV() {
 	let link = "";
 	let resources = performance.getEntriesByType("resource");
 	resources.forEach(resource => {
-	    if (resource.name.indexOf(".json?") > -1) {
+	    if (resource.name.indexOf(".json?search") > -1 && resource.name.indexOf("draw=99") == -1 && resource.name != "https://www.wholecell.io/inventories.json?search%5Bvalue%5D=&start=0&length=100&draw=1" && resource.name != "https://www.wholecell.io/inventories.json?search%5Bvalue%5D=&start=0&length=100&draw=5&functionality=&device%5Bmanufacturer%5D=&device%5Bmodel%5D=&device%5Bvariant%5D=&device%5Bcapacity%5D=&device%5Bcolor%5D=&device%5Bnetwork%5D=&damage_match=any&inventory_date_from=&inventory_date_until=&status_changed_at_gt=&status_changed_at_lt=&esn_text=&hex_id_text=&custom_field_text=") {
 	        link = resource.name;
+	        console.log(link);
 	        if (link.indexOf("length") > -1) {
 		        setLen = document.querySelector("[class='pagination pull-right']").lastElementChild.previousElementSibling.firstElementChild.innerText * 100;
 		        link = link.replace(link.slice(link.indexOf("length"),link.indexOf("&",link.indexOf("length"))),"length="+setLen);
@@ -489,6 +498,10 @@ function makeCSV() {
 	        //console.log("Response End Time:", resource.responseEnd);
 	    }
 	});
+	
+  if(link == "") {
+  	alert("Couldn't find any data? Retry one of your filters and try again.");
+  }
 	
 	
 	let pal = document.getElementById("Pallet").lastElementChild.value;
@@ -689,10 +702,169 @@ window.onload = function() {
 	//label printing
 	labelButtons();
 	
-	//CSV Maker
-	csvMake();
-	
+	if (document.URL.indexOf("new") == -1 && document.URL.indexOf("process_batches/") > -1 || document.URL.indexOf("inventories") > -1 && document.URL.indexOf("inventories/") == -1) {
+		//CSV Maker
+		csvMake();
+		
+		//Custom Filters
+		createCustomFilter();
+	}
 }
 
 //order importing
 //if (document.URL.indexOf("new") == -1 && document.URL.indexOf("process_batches/") > -1 || document.URL.indexOf("inventories") > -1 && document.URL.indexOf("inventories/") == -1) {
+
+//Create custom filters for our custom fields (Box Numbers and Pallet Numbers)
+let numPages = 15;
+
+if (numPages == 0 || numPages == undefined || numPages == null) {
+	alert("Cant Find Number of Pages?");
+}
+
+let cL1 = "https://www.wholecell.io/inventories.json?search%5Bvalue%5D=&start=";
+let cL2 = "&length=100&draw=99&functionality=&status%5B%5D=Available&grade%5B%5D=A&grade%5B%5D=B&grade%5B%5D=C&device%5Bmanufacturer%5D=&device%5Bmodel%5D=&device%5Bvariant%5D=&device%5Bcapacity%5D=&device%5Bcolor%5D=&device%5Bnetwork%5D=&damage_match=any&locations%5B%5D=23293&inventory_date_from=&inventory_date_until=&status_changed_at_gt=&status_changed_at_lt=&esn_text=&hex_id_text=&custom_field_text=";
+
+//let boxText = "";
+
+let pageCount = 0;
+let innerCount = 0;
+
+let uniqueBoxNums = [];
+let uniquePalletNums = [];
+
+let refreshCustom = 0;
+
+async function pullCustom() {
+	if (refreshCustom == 1) {
+		while (pageCount < numPages) {
+			//console.log(pageCount);
+			let startCount = pageCount * 100;
+			let link = cL1 + startCount + cL2;
+			console.log(link);
+			pageCount++;
+				await fetch(link)
+			    .then(response => response.json()) // Parse the response as JSON
+			    .then(dataReturned => {
+				    // Now 'data' contains your JSON object
+				    //boxText = "PO,Date,Channel,Vendor,Devices,Paid\n";
+				    dataReturned.data.forEach(function(each){
+					    //let esn = each.esn;
+				    	let box
+				    	let pallet
+				    	let devName
+				    	let devGrade
+					    try {
+					    	box = each.custom_field_values.Box.value;
+					    }catch{
+					    	box = "unknown";
+					    }
+					    try {
+					    	pallet = each.custom_field_values.Pallet.value;
+					    }catch{
+					    	pallet = "unknown";
+					    	
+					    }
+					    try {
+					    	devName = each.device.title_1;
+					    }catch{
+					    	devName = "unknown";
+					    	
+					    }
+					    try {
+					    	devGrade = each.grade;
+					    }catch{
+					    	devGrade = "unknown";
+					    }
+					    //boxText = boxText + esn + "," + box + "," + pallet + "\n";
+					    if (box != "unknown" && !uniqueBoxNums.includes(devName + " (" + devGrade + ")" + " - (" + box + ")")){
+					    	uniqueBoxNums.push(devName + " (" + devGrade + ")" + " - (" + box + ")");
+					    }
+					    if (box != "unknown" && !uniquePalletNums.includes(pallet)){
+					    	uniquePalletNums.push(pallet);
+					    }
+				    });
+				    innerCount++;
+				}).catch(error => {
+				    console.error('Error fetching status JSON:', error);
+				});
+		}
+		if (numPages == innerCount) {
+			createOption(1, "boxNums", uniqueBoxNums, "Boxes", "Select Box");
+			/*
+			localStorage.setItem("boxNums", uniqueBoxNums);
+			uniqueBoxNums.toSorted().forEach(function(each){
+				let statOpt = document.createElement("option");
+				statOpt.value = each;
+				statOpt.innerText = each;
+				document.getElementById("Boxes").lastElementChild.appendChild(statOpt);
+				document.getElementById("Boxes").lastElementChild.firstElementChild.innerText = "Select Box";
+	  	});
+	  	*/
+		}
+	} else {
+		createOption(0, "boxNums", uniqueBoxNums, "Boxes", "Select Box");
+		/*
+		uniqueBoxNums = localStorage.getItem("boxNums").split(",");
+		uniqueBoxNums.toSorted().forEach(function(each){
+			let statOpt = document.createElement("option");
+			statOpt.value = each;
+			statOpt.innerText = each;
+			document.getElementById("Boxes").lastElementChild.appendChild(statOpt);
+			document.getElementById("Boxes").lastElementChild.firstElementChild.innerText = "Select Box";
+		});
+		*/
+	}
+	  
+		/*
+		if (numPages == innerCount) {
+		  let blob = new Blob([boxText], { type: 'text/csv' });
+			let url = URL.createObjectURL(blob);
+			window.open(url);
+		}
+	  */
+}
+
+function createOption(flag, locVar, relAry, tarElm, plcHol) {
+	switch (flag) {
+		case 0:
+			relAry = localStorage.getItem(locVar).split(",");
+		case 1:
+			localStorage.setItem(locVar, relAry);
+	}
+	relAry.toSorted().forEach(function(each){
+		let statOpt = document.createElement("option");
+		statOpt.value = each;
+		statOpt.innerText = each;
+		document.getElementById(tarElm).lastElementChild.appendChild(statOpt);
+		document.getElementById(tarElm).lastElementChild.firstElementChild.innerText = plcHol;
+	});
+}
+
+function createCustomFilter() {
+	//create location field
+	let clonedBox = document.evaluate("//*[text()='Custom Field Search']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.parentElement.cloneNode(true);
+	let selBox = document.createElement("select");
+	let optBoxBlank = document.createElement("option");
+	optBoxBlank.innerText = "Loading...";
+	optBoxBlank.value = "";
+	clonedBox.firstElementChild.innerText = "Boxes";
+	clonedBox.id = "Boxes";
+	selBox.className = "box_field";
+	
+	selBox.addEventListener("change", function(){
+		let inputBox = document.evaluate("//*[contains(text(),'Custom Field Search')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.nextElementSibling;
+		inputBox.focus();
+		inputBox.select();
+		inputBox.value = this.value.split("- (")[1].split(")")[0];
+		setTimeout(function() {
+			inputBox.dispatchEvent(enter);
+		}, 1000);
+	})
+	
+	selBox.appendChild(optBoxBlank);
+	clonedBox.removeChild(clonedBox.lastElementChild);
+	clonedBox.appendChild(selBox);
+	document.getElementById("inventory-filter").firstElementChild.firstElementChild.nextElementSibling.nextElementSibling.appendChild(clonedBox);
+	
+	pullCustom();
+}
