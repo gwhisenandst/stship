@@ -41,6 +41,7 @@ let ev;
 
 let skipPaid = 0;
 let skipSummary = 0;
+let autoPrint = 0;
 
 let changeShipFlag = 0;
 
@@ -53,14 +54,27 @@ let amountPlus = 0.5;
 
 function getShipRates() {
 	let cheapValid = [];
+	let notValid = [];
 	let finalArray = [];
 	
 	shipRatesDict.forEach((eachRate) => {
 		if (eachRate.time <= 3) {
 			cheapValid.push(eachRate);
+		} else {
+			notValid.push(eachRate);
 		}
 	});
-	let cheapestRate = cheapValid.sort((a, b) => a.cost - b.cost)[0].cost;
+	
+	let cheapestRate;
+	try {
+		cheapestRate = cheapValid.sort((a, b) => a.cost - b.cost)[0].cost;
+	} catch {}
+	
+	let cheapestNonValidRate;
+	try {
+		cheapestNonValidRate = notValid.sort((a, b) => a.cost - b.cost)[0].cost;
+	} catch {}
+	
 	//console.log(cheapestRate);
 	
 	//best value within the range, ie quickest within the range allowed
@@ -69,16 +83,33 @@ function getShipRates() {
 	//sort by cheapest within the range
 	//shipRatesDict = shipRatesDict.sort((a, b) => a.cost - b.cost);
 	
-	shipRatesDict.forEach((eachRate) => {
-		//console.log(eachRate.cost + " : " + cheapestRate);
-		if (eachRate.cost > (cheapestRate + amountPlus) || eachRate.time > 3) {
-			//outOfRangeArray.push(shipRatesDict.splice(shipRatesDict.indexOf(eachRate),1)[0]);
-			outOfRangeArray.push(eachRate);
-		} else if (!finalArray.includes(eachRate)){
-			finalArray.push(eachRate);
-			//console.log("Within range: " + eachRate.name);
-		}
-	});
+	console.log(cheapestRate);
+	
+	if (cheapestRate != undefined) {
+		shipRatesDict.forEach((eachRate) => {
+			//console.log(eachRate);
+			//console.log(eachRate.cost + " : " + cheapestRate);
+			if (eachRate.cost > (cheapestRate + amountPlus) || eachRate.time > 3) {
+				//outOfRangeArray.push(shipRatesDict.splice(shipRatesDict.indexOf(eachRate),1)[0]);
+				outOfRangeArray.push(eachRate);
+			} else if (!finalArray.includes(eachRate)){
+				finalArray.push(eachRate);
+				//console.log("Within range: " + eachRate.name);
+			}
+		});
+	} else if (cheapestRate == undefined) {
+		shipRatesDict.forEach((eachRate) => {
+			//console.log(eachRate);
+			//console.log(eachRate.cost + " : " + cheapestRate);
+			if (eachRate.cost > (cheapestNonValidRate + amountPlus) || eachRate.time > 3) {
+				//outOfRangeArray.push(shipRatesDict.splice(shipRatesDict.indexOf(eachRate),1)[0]);
+				outOfRangeArray.push(eachRate);
+			} else if (!finalArray.includes(eachRate)){
+				finalArray.push(eachRate);
+				//console.log("Within range: " + eachRate.name);
+			}
+		});
+	}
 	
 	outOfRangeArray = outOfRangeArray.sort((a, b) => a.cost - b.cost);
 	
@@ -191,6 +222,14 @@ const fedexsp = new KeyboardEvent('keydown', {
   key: '2', // The specific key being pressed
   code: 'Digit2', // The code for the '5' key
   ctrlKey: true, // Indicate that the Ctrl key is pressed
+  bubbles: true, // Allow the event to bubble up through the DOM
+  cancelable: true // Allow the default action to be prevented
+});
+
+const print = new KeyboardEvent('keydown', {
+  key: 'p', // The specific key being pressed
+  //code: 'Digit2', // The code for the '5' key
+  //ctrlKey: true, // Indicate that the Ctrl key is pressed
   bubbles: true, // Allow the event to bubble up through the DOM
   cancelable: true // Allow the default action to be prevented
 });
@@ -610,7 +649,9 @@ function createToggle(name, relatedVariable) {
 		case "skipPaid":
 			skipPaid = parseInt(localStorage.getItem(name));
 		case "skipSummary":
-			skipPaid = parseInt(localStorage.getItem(name));
+			skipSummary = parseInt(localStorage.getItem(name));
+		case "autoPrint":
+			autoPrint = parseInt(localStorage.getItem(name));
 	}
 	
 	option.addEventListener("click", function(){
@@ -625,6 +666,8 @@ function createToggle(name, relatedVariable) {
 				skipPaid = parseInt(localStorage.getItem(name));
 			case "skipSummary":
 				skipSummary = parseInt(localStorage.getItem(name));
+			case "autoPrint":
+				autoPrint = parseInt(localStorage.getItem(name));
 		}
 	});
 	
@@ -687,10 +730,12 @@ function settingsButton() {
 	
 	let customPayPop = createToggle("Disable Paid Popup?", "skipPaid");
 	let customSumPop = createToggle("Disable Summary Popup?", "skipSummary");
+	let customPrtPop = createToggle("Auto Print?", "autoPrint");
 	
 	customTwo.appendChild(document.createElement("br"));
 	customTwo.appendChild(customPayPop);
 	customTwo.appendChild(customSumPop);
+	customTwo.appendChild(customPrtPop);
 	customTwo.appendChild(customUPD);
 	
 	customFields.appendChild(customOne);
@@ -838,6 +883,7 @@ let aobserver = new MutationObserver((mutations) => {
 				  			} else if(eachtag.indexOf("[1-Day]") > -1) {
 				  				let shiptype = tags.children[t].firstElementChild.firstElementChild.innerText.split("[")[1].split("]")[0];
 				  				paidflag = 1;
+				  				console.log(skipPaid);
 				  				if (skipPaid == 0) {
 				  					alert("This customer has paid for " + shiptype + " shipping!");
 				  				}
@@ -1042,6 +1088,7 @@ function recordShip(endFlag = 0) {
 			//console.log(numDays);
 			//console.log(delTime);
 			let shipMap = {cost: floatRate, name: provider, time: numDays, estimate: delTime};
+			//console.log(shipMap);
 			shipRatesDict.push(shipMap);
 		}
 		if(!shippingRates.includes(shipString)){
@@ -1051,7 +1098,8 @@ function recordShip(endFlag = 0) {
 	} else if (endFlag != 0) {
 		
 		//console.log("Finished Shipping, return rates");
-		cheapest = shippingRates[rateref.indexOf(Math.min(...rateref))];
+		//cheapest = shippingRates[rateref.indexOf(Math.min(...rateref))];
+		//console.log(cheapest);
 		//selCheapest(cheapest);
 		
 		ptarget = document.evaluate("/html/body/div[2]/div/div", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -1107,6 +1155,15 @@ function recordShip(endFlag = 0) {
 		shipDiv.setAttribute("style", "display: block; position: fixed; z-index: 100; pointer-events: none; color: var(--green-00331C); top: 82vh; right: 500px; border-radius: 7px; background: white;")
 		document.body.parentElement.prepend(shipDiv);
 		//getShipRates();
+		
+		if (autoPrint == 1) {
+			setTimeout(function() {
+				setTimeout(function() {
+					let pageLocForDispatch = document.getElementsByClassName("body-j6miezO")[0];
+					pageLocForDispatch.dispatchEvent(print);
+				}, 1000)
+			}, 1000);
+		}
 	}
 }
 
@@ -1274,8 +1331,6 @@ new PerformanceObserver((entryList) => {
 
 
 //document.evaluate("//*[text()='ShipStation Connect Missing']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-
-
 
 
 
