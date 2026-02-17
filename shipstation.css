@@ -19,7 +19,7 @@
     background: white;
     position: absolute;
     z-index: 101;
-    align-self: anchor-center;
+    top: 50px;
     justify-self: anchor-center;
     display: flex;
     flex-direction: column;
@@ -44,5 +44,6 @@
 .presetFlex{
     display: flex;
 }
+
 
 
